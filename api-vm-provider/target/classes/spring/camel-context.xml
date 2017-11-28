@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+<bean class="org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicy"
+        id="policy">
+    <property name="useJmx" value="true"/>
+    <property name="jmxDomain" value="fis.metrics"/>
+</bean>
+
+  <!-- Define a traditional camel context here -->
+  <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+
+<route id="api-vm" routePolicyRef="policy">
+    <from uri="netty4-http:0.0.0.0:10000/vm/create"/>
+    <setHeader headerName="os">
+    <xpath resultType="String">//os</xpath>
+    </setHeader>
+    <log message="Provisioning VM with OS: ${header.os}... done!"/>
+    <toD uri="metrics:counter:os.${header.os}"/>
+    <setBody><constant>success</constant></setBody>
+</route>
+
+<route id="client">
+    <from uri="timer:samples"/>
+    <to uri="language:constant:resource:classpath:samples/os.xml"/>
+    <setHeader headerName="count">
+        <xpath resultType="String">count(//os)+1</xpath>
+    </setHeader>
+    <setHeader headerName="random">
+      <simple>${random(1,${header.count})}</simple>
+    </setHeader>
+    <setHeader headerName="random-os">
+      <xpath resultType="String">//os[in:header('random')]</xpath>
+    </setHeader>
+    <to uri="xslt:xslt/os-request.xsl"/>
+    <to uri="netty4-http:0.0.0.0:10000/vm/create"/>
+</route>
+
+  </camelContext>
+
+</beans>

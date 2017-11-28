@@ -1,0 +1,71 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Deployment"
+metadata:
+  annotations:
+    fabric8.io/iconUrl: "img/icons/camel.svg"
+    fabric8.io/metrics-path: "dashboard/file/camel-routes.json/?var-project=api-vm-provider&var-version=1.0.0"
+  labels:
+    provider: "fabric8"
+    project: "api-vm-provider"
+    version: "1.0.0"
+    group: "fis.demo"
+  name: "api-vm-provider"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: "api-vm-provider"
+      provider: "fabric8"
+      group: "fis.demo"
+  template:
+    metadata:
+      annotations:
+        fabric8.io/iconUrl: "img/icons/camel.svg"
+        fabric8.io/metrics-path: "dashboard/file/camel-routes.json/?var-project=api-vm-provider&var-version=1.0.0"
+      labels:
+        provider: "fabric8"
+        project: "api-vm-provider"
+        version: "1.0.0"
+        group: "fis.demo"
+    spec:
+      containers:
+      - env:
+        - name: "JAVA_OPTIONS"
+          value: "-javaagent:agent/jmx_prometheus_javaagent-0.10.jar=9779:agent/config.yml"
+        - name: "KUBERNETES_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
+        - name: "JAVA_APP_DIR"
+          value: "/deployments"
+        image: "api-vm-provider:1.0.0"
+        imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          httpGet:
+            path: "/health"
+            port: 8081
+          initialDelaySeconds: 180
+        name: "spring-boot"
+        ports:
+        - containerPort: 8080
+          name: "http"
+          protocol: "TCP"
+        - containerPort: 9779
+          name: "prometheus"
+          protocol: "TCP"
+        - containerPort: 8778
+          name: "jolokia"
+          protocol: "TCP"
+        readinessProbe:
+          httpGet:
+            path: "/health"
+            port: 8081
+          initialDelaySeconds: 10
+        resources:
+          limits:
+            cpu: "1.0"
+          requests:
+            cpu: "0.2"
+        securityContext:
+          privileged: false

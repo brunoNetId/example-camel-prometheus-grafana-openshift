@@ -1,0 +1,15 @@
+---
+apiVersion: "v1"
+kind: "List"
+items:
+- apiVersion: "v1"
+  kind: "ImageStream"
+  metadata:
+    name: "api-vm-provider"
+  spec:
+    tags:
+    - from:
+        kind: "ImageStreamImage"
+        name: "api-vm-provider@sha256:e3647e39884800f0c41bbf83fe0a859c4e62cb55a3274df5e211ba5ff07c1b71"
+        namespace: "mydemo"
+      name: "1.0.0"

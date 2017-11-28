@@ -1,0 +1,15 @@
+spec:
+  template:
+    spec:
+      containers:
+        - 
+          resources:
+            requests:
+              cpu: "0.2"
+#              memory: 256Mi
+            limits:
+              cpu: "1.0"
+#              memory: 256Mi
+          env:
+            - name: JAVA_OPTIONS 
+              value: -javaagent:agent/jmx_prometheus_javaagent-0.10.jar=9779:agent/config.yml
